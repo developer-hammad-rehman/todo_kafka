@@ -28,7 +28,7 @@ def add_data(content:str):
     session.close()
 
 async def admin():
-    admin_kafka = AIOKafkaAdminClient(bootstrap_servers="broker:19092" , request_timeout_ms=100)
+    admin_kafka = AIOKafkaAdminClient(bootstrap_servers="broker:19092")
     print("Kafka Connecting...")
     await admin_kafka.start() # type: ignore
     print("Kakfa Connected...")
@@ -44,7 +44,7 @@ async def admin():
 
 
 async def consumer(func = Depends(admin)):
-    consumer_kafka = AIOKafkaConsumer("todo"  , bootstrap_servers="broker:19092" , auto_offset_reset="earliest" , group_id="todo_main" , consumer_timeout_ms=100 ,  retry_backoff_ms=10)
+    consumer_kafka = AIOKafkaConsumer("todo"  , bootstrap_servers="broker:19092" , auto_offset_reset="earliest" , group_id="todo_main")
     print("Creating Kafka Consumer...")
     await consumer_kafka.start()
     print("Topic Created SucessFully")
@@ -57,8 +57,6 @@ async def consumer(func = Depends(admin)):
 
     except KafkaConnectionError as e:
         print(e)
-        await asyncio.sleep(10)
-        await consumer() # type: ignore
     finally:
         await consumer_kafka.stop()
 
