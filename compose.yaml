@@ -1,19 +1,19 @@
 version: '3.8'
 name: kafka_todo
 services:
-  producer:
-    build:
-      context: ./microservice_todo_producer
-      dockerfile: Dockerfile
-    volumes:
-      - ./microservice_todo_producer:/code/
-    ports:
-      - "8000:8000"
-    depends_on:
-      - postgres_db
-      - broker
-    networks:
-      - kafka_todo_net
+  # producer:
+  #   build:
+  #     context: ./microservice_todo_producer
+  #     dockerfile: Dockerfile
+  #   volumes:
+  #     - ./microservice_todo_producer:/code/
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - postgres_db
+  #     - broker
+  #   networks:
+  #     - kafka_todo_net
   consumer:
     build:
       context: microservice_todo_consumer
@@ -24,6 +24,7 @@ services:
       - "8001:8000"
     depends_on:
       - postgres_db
+      - broker
     networks:
       - kafka_todo_net
   postgres_db:

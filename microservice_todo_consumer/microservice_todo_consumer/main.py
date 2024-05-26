@@ -11,39 +11,40 @@ import asyncio
 
 
 
-db_url = data_base_url.replace("postgresql" , "postgresql+psycopg2")
+# db_url = data_base_url.replace("postgresql" , "postgresql+psycopg2")
 
-def create_table():
-    SQLModel.metadata.create_all(engine)
+# def create_table():
+#     SQLModel.metadata.create_all(engine)
 
-engine = create_engine(db_url , echo=True)
-
-
-def add_data(content:str):
-    data = Todo(content=content)
-    session = Session(engine)
-    session.add(data)
-    session.commit()
-    session.refresh(data)
-    session.close()
-
-async def admin():
-    admin_kafka = AIOKafkaAdminClient(bootstrap_servers="broker:19092")
-    print("Kafka Connecting...")
-    await admin_kafka.start() # type: ignore
-    print("Kakfa Connected...")
-    try:
-        print("Creating Topic...")
-        new_topic = NewTopic(name="todo" , num_partitions=1 , replication_factor=1)
-        await admin_kafka.create_topics(new_topics=[new_topic])
-        print("Topic Created...")
-    except (TopicAuthorizationFailedError , AuthenticationFailedError , TopicAlreadyExistsError , Exception) as e :
-        print(str(e))
-    finally:
-        await admin_kafka.close()
+# engine = create_engine(db_url , echo=True)
 
 
-async def consumer(func = Depends(admin)):
+# def add_data(content:str):
+#     data = Todo(content=content)
+#     session = Session(engine)
+#     session.add(data)
+#     session.commit()
+#     session.refresh(data)
+#     session.close()
+
+# async def admin():
+#     admin_kafka = AIOKafkaAdminClient(bootstrap_servers="broker:19092")
+#     print("Kafka Connecting...")
+#     await admin_kafka.start() # type: ignore
+#     print("Kakfa Connected...")
+#     try:
+#         print("Creating Topic...")
+#         new_topic = NewTopic(name="todo" , num_partitions=1 , replication_factor=1)
+#         await admin_kafka.create_topics(new_topics=[new_topic])
+#         print("Topic Created...")
+#     except (TopicAuthorizationFailedError , AuthenticationFailedError , TopicAlreadyExistsError , Exception) as e :
+#         print("Error : Connection....")
+#         print(str(e))
+#     finally:
+#         await admin_kafka.close()
+
+
+async def consumer():
     consumer_kafka = AIOKafkaConsumer("todo"  , bootstrap_servers="broker:19092" , auto_offset_reset="earliest" , group_id="todo_main")
     print("Creating Kafka Consumer...")
     await consumer_kafka.start()
@@ -51,19 +52,16 @@ async def consumer(func = Depends(admin)):
     try:
         async for msg in consumer_kafka:
             print("Listening...")
-            value  = bytes(msg.value) # type: ignore
-            add_data(content=value.decode("utf-8"))
+            # value  = bytes(msg.value) # type: ignore
+            # add_data(content = json.loads(value.decode("utf-8")))
             print(msg.value)
-
-    except KafkaConnectionError as e:
-        print(e)
     finally:
-        await consumer_kafka.stop()
+        await consumer_kafka.stop() # type: ignore
 
 @asynccontextmanager
 async def lifespan(app:FastAPI):
-    create_table()
-    asyncio.create_task(consumer())
+    # create_table()
+    task = asyncio.create_task(consumer())
     yield
 
 
